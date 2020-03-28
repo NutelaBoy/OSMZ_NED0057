@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">OSMZHTTPServer</string>
+    <string name="btn1_text">Start HTTP Server</string>
+    <string name="btn2_text">Stop HTTP Server</string>
+    <string name="camera_activity_btn_text">Camera Activity</string>
+    <string name="make_picture_btn_text">Start capture</string>
+    <string name="stop_picture_btn_text">Stop capture</string>
+</resources>
