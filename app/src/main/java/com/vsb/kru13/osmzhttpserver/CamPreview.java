@@ -13,7 +13,7 @@ public class CamPreview extends SurfaceView implements SurfaceHolder.Callback {
 
     private SurfaceHolder mHolder;
     private Camera mCamera;
-    private boolean safeToTakePicture = false;
+    private boolean safeToTakePicture;
 
 
     public CamPreview(Context context, Camera camera, Boolean safe){

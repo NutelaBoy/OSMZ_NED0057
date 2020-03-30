@@ -15,6 +15,8 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.TimerTask;
 
 public class CameraActivity extends Activity {
@@ -22,12 +24,10 @@ public class CameraActivity extends Activity {
     private Camera mCamera;
     private FrameLayout frameLayout;
     private CamPreview camPreview;
-    private Button captureImage;
+    private Button startStream;
     private boolean safeToTakePicture = true;
     public static byte[] imageInBytes;
     public static boolean streamingIsUp = true;
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,8 +35,9 @@ public class CameraActivity extends Activity {
         setContentView(R.layout.activity_camera);
 
         frameLayout = (FrameLayout)findViewById(R.id.camera_preview);
-        captureImage = (Button)findViewById(R.id.makePicture);
+        startStream = (Button)findViewById(R.id.startStream);
         Button stopStream = (Button)findViewById(R.id.stopStream);
+        Button takeSnapshot = (Button)findViewById(R.id.makePicture);
 
         if(checkCameraHardware(this)){
             Toast.makeText(this,"Camera is ready", Toast.LENGTH_LONG).show();
@@ -48,7 +49,7 @@ public class CameraActivity extends Activity {
 
         camPreview = new CamPreview(this, mCamera, safeToTakePicture);
 
-        captureImage.setOnClickListener(new View.OnClickListener() {
+        startStream.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 timerTask.run();
@@ -56,6 +57,16 @@ public class CameraActivity extends Activity {
         });
 
         frameLayout.addView(camPreview);
+
+        takeSnapshot.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (safeToTakePicture) {
+                mCamera.takePicture(null, null, mPictureCallback);
+                safeToTakePicture = false;
+            }
+            }
+        });
 
         stopStream.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -70,26 +81,17 @@ public class CameraActivity extends Activity {
         public void run() {
             camPreview.getSafeToTakePicture();
             mCamera.setPreviewCallback(previewCallback);
-            /*if (safeToTakePicture) {
-                mCamera.takePicture(null, null, mPictureCallback);
-                (new Handler()).postDelayed(this, 333);
-                safeToTakePicture = false;
-            }*/
+
         }
     };
 
-    //Kod funguje, ale v timer tasku pouzivam onpreviewCallback
+
     Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
             File picture = getOutputMediaFile();
-            imageInBytes = data;
 
-            mCamera.startPreview();
-            safeToTakePicture = true;
-
-
-          /*  if(picture == null){
+            if(picture == null){
                 safeToTakePicture = true;
                 return;
             }else{
@@ -106,7 +108,7 @@ public class CameraActivity extends Activity {
                     e.printStackTrace();
                 }
 
-            }*/
+            }
         }
     };
 
@@ -131,11 +133,7 @@ public class CameraActivity extends Activity {
 
 
             try {
-
-
                 mCamera.startPreview();
-
-
                 Thread.sleep(300);
             } catch (InterruptedException e) {
                 e.printStackTrace();

@@ -8,15 +8,11 @@ import android.os.Message;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
-
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -52,8 +48,6 @@ public class ClientThreads extends Thread {
         this.s = s;
         this.handler = handler;
         this.semaphore = semaphore;
-
-
     }
 
     public void run() {
@@ -95,7 +89,6 @@ public class ClientThreads extends Thread {
                         while ((c = reader.read()) != -1) {
                                     o.write(c);
                         }
-
                         o.flush();
                         process.destroy();
 
@@ -122,8 +115,6 @@ public class ClientThreads extends Thread {
                             out.flush();
                             out.write("HTTP/1.0 200 OK\n" +
                                     "Content-Type: multipart/x-mixed-replace; boundary=\"OSMZ_boundary\"\n\n");
-
-
                             while (true) {
                                 out.flush();
                                 out.write("--OSMZ_boundary\n" +
@@ -137,15 +128,11 @@ public class ClientThreads extends Thread {
                                 }
                             }
                             out.write("--OSMZ_boundary");
-
                             out.flush();
                             o.flush();
-
                         }
-
                     }
                 }
-
 
                 String path = "";
                 path = Environment.getExternalStorageDirectory().getAbsolutePath();
