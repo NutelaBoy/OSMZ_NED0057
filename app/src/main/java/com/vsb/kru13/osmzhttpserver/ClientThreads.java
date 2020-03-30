@@ -71,7 +71,7 @@ public class ClientThreads extends Thread {
                 type = tmp.split(" ")[0];
                 uri = tmp.split(" ")[1];
 
-                if(tmp.contains(bin)){
+                if(uri.contains(bin)){
 
                     String command = "uptime";
                     List<String> alist = new ArrayList<>();
@@ -90,7 +90,7 @@ public class ClientThreads extends Thread {
                     //processBuilder.redirectOutput(myObj);
                 }
 
-                if(tmp.contains(camera)){
+                if(uri.contains(camera)){
 
                     if(imageInBytes != null) {
 
@@ -104,25 +104,36 @@ public class ClientThreads extends Thread {
                     }
                 }
 
-                if(tmp.contains(stream)){
-                    out.flush();
-                    out.write("HTTP/1.0 200 OK\n" +
-                            "Content-Type: multipart/x-mixed-replace; boundary=\"OSMZ_boundary\"\n\n");
+                if(uri.contains(stream)){
 
-                    while(!streamingIsUp){
+                    if(imageInBytes != null) {
+
                         out.flush();
-                        out.write("--OSMZ_boundary\n" +
-                                "Content-Type: image/jpeg\n\n");
+                        out.write("HTTP/1.0 200 OK\n" +
+                                "Content-Type: multipart/x-mixed-replace; boundary=\"OSMZ_boundary\"\n\n");
+
+
+
+                        while(true){
+                            out.flush();
+                            out.write("--OSMZ_boundary\n" +
+                                    "Content-Type: image/jpeg\n\n");
+                            out.flush();
+                            o.write(imageInBytes);
+                            o.flush();
+
+                            if (!streamingIsUp) {
+                                break;
+                            }
+                        }
+
+
+                        out.write("--OSMZ_boundary");
+
                         out.flush();
-                        o.write(imageInBytes);
                         o.flush();
+
                     }
-                    out.write("--OSMZ_boundary");
-
-                    out.flush();
-                    o.flush();
-
-
 
                 }
             }

@@ -5,17 +5,20 @@ package com.vsb.kru13.osmzhttpserver;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Rect;
+import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.util.Base64;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.TimerTask;
@@ -29,6 +32,7 @@ public class CameraActivity extends Activity {
     private boolean safeToTakePicture = true;
     public static byte[] imageInBytes;
     public static boolean streamingIsUp = true;
+
 
 
     @Override
@@ -71,11 +75,12 @@ public class CameraActivity extends Activity {
         @Override
         public void run() {
             camPreview.getSafeToTakePicture();
-            if (safeToTakePicture) {
+            mCamera.setPreviewCallback(previewCallback);
+            /*if (safeToTakePicture) {
                 mCamera.takePicture(null, null, mPictureCallback);
-                (new Handler()).postDelayed(this, 5000);
+                (new Handler()).postDelayed(this, 333);
                 safeToTakePicture = false;
-            }
+            }*/
         }
     };
 
@@ -85,8 +90,11 @@ public class CameraActivity extends Activity {
             File picture = getOutputMediaFile();
             imageInBytes = data;
 
+            mCamera.startPreview();
+            safeToTakePicture = true;
 
-            if(picture == null){
+
+          /*  if(picture == null){
                 safeToTakePicture = true;
                 return;
             }else{
@@ -103,7 +111,41 @@ public class CameraActivity extends Activity {
                     e.printStackTrace();
                 }
 
+            }*/
+        }
+    };
+
+    public static byte[] convertToImg(byte[] data, Camera camera) {
+        Camera.Parameters parameters = camera.getParameters();
+        Camera.Size size = parameters.getPreviewSize();
+
+        YuvImage image = new YuvImage(data, parameters.getPreviewFormat(), size.width, size.height, null);
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        image.compressToJpeg(new Rect(0, 0, size.width, size.height), 100, out);
+        byte[] imageBytes = out.toByteArray();
+        return imageBytes;
+    }
+
+    Camera.PreviewCallback previewCallback = new Camera.PreviewCallback() {
+        @Override
+        public void onPreviewFrame(byte[] data, Camera camera) {
+            File picture = getOutputMediaFile();
+
+            imageInBytes = convertToImg(data, camera);
+
+
+            try {
+
+
+                mCamera.startPreview();
+
+
+                Thread.sleep(300);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
+            safeToTakePicture = true;
         }
     };
 
