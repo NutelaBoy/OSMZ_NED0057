@@ -93,22 +93,23 @@ public class ClientThreads extends Thread {
                         process.destroy();
 
                     }
+                }
+                if (uri.contains(camera)) {
 
-                    if (uri.contains(camera)) {
+                    if (imageInBytes != null) {
 
-                        if (imageInBytes != null) {
-
-                            out.flush();
-                            out.write("HTTP/1.0 200 OK\n" +
+                        out.flush();
+                        out.write("HTTP/1.0 200 OK\n" +
                                     "Content-Type: image/jpeg\n\n");
-                            out.flush();
-                            o.write(imageInBytes);
+                        out.flush();
+                        o.write(imageInBytes);
 
-                            o.flush();
-                        }
+                        o.flush();
                     }
+                }
 
-                    if (uri.contains(stream)) {
+
+                if (uri.contains(stream)) {
 
                         if (imageInBytes != null) {
 
@@ -131,8 +132,8 @@ public class ClientThreads extends Thread {
                             out.flush();
                             o.flush();
                         }
-                    }
                 }
+
 
                 String path = "";
                 path = Environment.getExternalStorageDirectory().getAbsolutePath();
