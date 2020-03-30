@@ -1,7 +1,5 @@
 package com.vsb.kru13.osmzhttpserver;
 
-
-
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -10,7 +8,6 @@ import android.graphics.YuvImage;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
@@ -18,9 +15,6 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.TimerTask;
 
 public class CameraActivity extends Activity {

@@ -9,11 +9,14 @@ import android.util.Log;
 import android.webkit.MimeTypeMap;
 
 
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -67,137 +70,143 @@ public class ClientThreads extends Thread {
             String bin = "/cgi-bin";
 
             String tmp = in.readLine();
-            if(tmp !=null && !tmp.isEmpty()){
+            if (tmp != null && !tmp.isEmpty()) {
                 type = tmp.split(" ")[0];
                 uri = tmp.split(" ")[1];
 
-                if(uri.contains(bin)){
+                if (uri.contains(bin)) {
+                    
+                    String command = uri.substring(9);
+                    String[] commands = command.split("%20");
 
-                    String command = "uptime";
-                    List<String> alist = new ArrayList<>();
-                    alist.add("cmd.exe");
-                    alist.add("/C");
-                    ProcessBuilder processBuilder = new ProcessBuilder();
-                    processBuilder.command(alist);
-                    //processBuilder.command("cmd.exe","/c","cd C:\\Users\\matej\\AppData\\Local\\Android\\Sdk\\platform-tools\\adb shell " + command);
-                    try {
-                        processBuilder.start();
-                    }catch (IOException e ){
-                        e.printStackTrace();
-                    }
+                    if (commands.length > 0) {
+                        List<String> arguments = new ArrayList<String>();
+                        arguments.add(commands[0]);
 
-                    //File myObj = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "filename.txt");
-                    //processBuilder.redirectOutput(myObj);
-                }
+                        for (int i = 1; i < commands.length; i++) {
+                            arguments.add(commands[1]);
+                        }
 
-                if(uri.contains(camera)){
+                        ProcessBuilder processBuilder = new ProcessBuilder(arguments);
+                        Process process = processBuilder.start();
+                        BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()), 1);
 
-                    if(imageInBytes != null) {
-
-                        out.flush();
-                        out.write("HTTP/1.0 200 OK\n" +
-                                "Content-Type: image/jpeg\n\n");
-                        out.flush();
-                        o.write(imageInBytes);
+                        int c = 0;
+                        while ((c = reader.read()) != -1) {
+                                    o.write(c);
+                        }
 
                         o.flush();
+                        process.destroy();
+
                     }
-                }
 
-                if(uri.contains(stream)){
+                    if (uri.contains(camera)) {
 
-                    if(imageInBytes != null) {
+                        if (imageInBytes != null) {
 
-                        out.flush();
-                        out.write("HTTP/1.0 200 OK\n" +
-                                "Content-Type: multipart/x-mixed-replace; boundary=\"OSMZ_boundary\"\n\n");
-
-
-
-                        while(true){
                             out.flush();
-                            out.write("--OSMZ_boundary\n" +
+                            out.write("HTTP/1.0 200 OK\n" +
                                     "Content-Type: image/jpeg\n\n");
                             out.flush();
                             o.write(imageInBytes);
+
+                            o.flush();
+                        }
+                    }
+
+                    if (uri.contains(stream)) {
+
+                        if (imageInBytes != null) {
+
+                            out.flush();
+                            out.write("HTTP/1.0 200 OK\n" +
+                                    "Content-Type: multipart/x-mixed-replace; boundary=\"OSMZ_boundary\"\n\n");
+
+
+                            while (true) {
+                                out.flush();
+                                out.write("--OSMZ_boundary\n" +
+                                        "Content-Type: image/jpeg\n\n");
+                                out.flush();
+                                o.write(imageInBytes);
+                                o.flush();
+
+                                if (!streamingIsUp) {
+                                    break;
+                                }
+                            }
+                            out.write("--OSMZ_boundary");
+
+                            out.flush();
                             o.flush();
 
-                            if (!streamingIsUp) {
-                                break;
-                            }
                         }
 
-
-                        out.write("--OSMZ_boundary");
-
-                        out.flush();
-                        o.flush();
-
                     }
-
                 }
-            }
 
 
-            String path = "";
-            path = Environment.getExternalStorageDirectory().getAbsolutePath();
-            File f = new File(path + uri);
+                String path = "";
+                path = Environment.getExternalStorageDirectory().getAbsolutePath();
+                File f = new File(path + uri);
 
-            bundle = new Bundle();
-            msg = new Message();
+                bundle = new Bundle();
+                msg = new Message();
 
-            bundle.putString("type", type);
-            bundle.putString("path", path + uri);
-            bundle.putLong("sizeFile", f.length());
-            msg.setData(bundle);
-            handler.sendMessage(msg);
+                bundle.putString("type", type);
+                bundle.putString("path", path + uri);
+                bundle.putLong("sizeFile", f.length());
+                msg.setData(bundle);
+                handler.sendMessage(msg);
 
-            if(!f.exists()){
-                out.write("HTTP/1.0 404 Not found\n" +
-                            "Content-Type: text/html\n" +
-                            "\n" +
-                            "<html>\n" +
-                            "<body>\n" +
-                            "<h1>Not found</h1></body></html>");
-            }
-            else{
-                if(f.isFile()){
-                        out.write("HTTP/1.0 200 OK\n" +
-                            "Content-Type: " + getMimeType(f.getAbsolutePath()) + "\n" +
-                            "Content-Type: " + f.length() + "\n\n");
-                        out.flush();
-                        FileInputStream inputStream = new FileInputStream(f);
-                        byte[] byteArray = new byte[(int)f.length()];
-                        inputStream.read(byteArray);
-                        o.write(byteArray);
-                }
-                else{
-
-                    File d = new File(path + uri);
-                    File[] files = d.listFiles();
-                    String vypis = "";
-                    StringBuilder builder = new StringBuilder();
-                    Log.d("files", files[0].getName());
-                    for (File inFile : files)
-                    {
-                        builder.append(inFile.getName());
-                        builder.append("<br>");
-                    }
-                    Log.d("text", vypis);
+                if (!f.exists() && !uri.contains("cgi-bin")) {
                     out.write("HTTP/1.0 404 Not found\n" +
                             "Content-Type: text/html\n" +
                             "\n" +
                             "<html>\n" +
                             "<body>\n" +
-                            "<h1>Directory listing</h1>" +
-                            "<h3>" + builder + "</h3></body></html>");
+                            "<h1>Not found</h1></body></html>");
+                } else {
+                    if (f.isFile()) {
+                        out.write("HTTP/1.0 200 OK\n" +
+                                "Content-Type: " + getMimeType(f.getAbsolutePath()) + "\n" +
+                                "Content-Type: " + f.length() + "\n\n");
+                        out.flush();
+                        FileInputStream inputStream = new FileInputStream(f);
+                        byte[] byteArray = new byte[(int) f.length()];
+                        inputStream.read(byteArray);
+                        o.write(byteArray);
+                    } else {
+
+                        if (!uri.contains("cgi-bin")) {
+                            File d = new File(path + uri);
+                            File[] files = d.listFiles();
+                            String vypis = "";
+                            StringBuilder builder = new StringBuilder();
+                            Log.d("files", files[0].getName());
+                            for (File inFile : files) {
+                                builder.append(inFile.getName());
+                                builder.append("<br>");
+                            }
+                            Log.d("text", vypis);
+                            out.write("HTTP/1.0 404 Not found\n" +
+                                    "Content-Type: text/html\n" +
+                                    "\n" +
+                                    "<html>\n" +
+                                    "<body>\n" +
+                                    "<h1>Directory listing</h1>" +
+                                    "<h3>" + builder + "</h3></body></html>");
+                        }
+                    }
                 }
-        }
+            }
+
             out.flush();
             o.flush();
             s.close();
             Log.d("SERVER", "Socket Closed");
-} catch (IOException e)
+        }catch (IOException e)
         {
             if (s != null && s.isClosed())
                 Log.d("SERVER", "Normal exit");
@@ -213,3 +222,4 @@ public class ClientThreads extends Thread {
                 }
     }
 }
+
