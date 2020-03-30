@@ -75,7 +75,7 @@ public class ClientThreads extends Thread {
                 uri = tmp.split(" ")[1];
 
                 if (uri.contains(bin)) {
-                    
+
                     String command = uri.substring(9);
                     String[] commands = command.split("%20");
 

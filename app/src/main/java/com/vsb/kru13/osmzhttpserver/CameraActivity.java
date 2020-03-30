@@ -78,6 +78,7 @@ public class CameraActivity extends Activity {
         }
     };
 
+    //Kod funguje, ale v timer tasku pouzivam onpreviewCallback
     Camera.PictureCallback mPictureCallback = new Camera.PictureCallback() {
         @Override
         public void onPictureTaken(byte[] data, Camera camera) {
